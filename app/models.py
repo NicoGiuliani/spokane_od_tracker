@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Incident(models.Model):
-    datetime = models.DateTimeField()
+    datetime = models.DateTimeField(unique=True)
     location = models.CharField(max_length=100)
     number_affected = models.IntegerField()
     narcan_doses_administered = models.IntegerField(null=True, blank=True)

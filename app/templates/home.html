@@ -4,10 +4,10 @@
 
 <hr />
 
-<table class="table table-hover">
+<table class="table table-hover" style="table-layout: auto; width: auto;">
   <thead>
     <tr>
-      <!-- <th scope="col">#</th> -->
+      <th scope="col">#</th>
       <th scope="col" class="col-2">Location</th>
       <th scope="col" class="col-2">
         <div style="display: inline-block">Date and Time</div>
@@ -34,7 +34,6 @@
         </div>
       </th>
       <th scope="col">Number Affected</th>
-
       <th scope="col">Doses of Narcan Administered</th>
       <th scope="col">Fatal Incident</th>
       <th scope="col">Report Text</th>
@@ -43,7 +42,7 @@
   <tbody>
     {% for incident in incidents %}
     <tr>
-      <!-- <th scope="row">{{ incident.id }}</th> -->
+      <th scope="row" style="white-space: nowrap;">{{ incident.incident_this_month }}</th>
       <td>{{ incident.location }}</td>
       <td>{{ incident.datetime }}</td>
       <td>{{ incident.number_affected }}</td>

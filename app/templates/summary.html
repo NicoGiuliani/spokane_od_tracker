@@ -1,26 +1,61 @@
-<div style="display: flex; justify-content: space-between; align-items: center">
-  <table class="table table-bordered" style="width: fit-content">
-    <tbody>
-      <tr>
-        <th scope="row">Reported ODs Today</th>
-        <td>{{ OD_count_today }}</td>
-      </tr>
-      <tr>
-        <th scope="row">Reported ODs Since {{ earliest_date }}</th>
-        <td>{{ OD_count_since_earliest }}</td>
-      </tr>
-      <tr>
-        <th scope="row">Reported Fatal Incidents Since {{ earliest_date }}</th>
-        <td>{{ fatal_incidents_since_earliest }}</td>
-      </tr>
-      <tr>
-        <th scope="row">Average Reported Per Day</th>
-        <td>{{ average_incidents_per_day }}</td>
-      </tr>
-      <tr>
-        <th scope="row">Average Fatalities Reported Per Day</th>
-        <td>{{ average_fatal_incidents_per_day }}</td>
-      </tr>
-    </tbody>
-  </table>
+<div style="display: flex; justify-content: flex-start; align-items: top; gap: 20px; height: 300px">
+  <div style="overflow-y: auto; margin: 0;">
+    <table id="fixed-table" class="table table-bordered" style="width: fit-content; height: 100%; margin-bottom: 0;">
+      <tbody>
+        <tr>
+          <th scope="row">Reported ODs Today</th>
+          <td>{{ OD_count_today }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Reported ODs Since {{ earliest_date }}</th>
+          <td>{{ OD_count_since_earliest }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Reported Fatal Incidents Since {{ earliest_date }}</th>
+          <td>{{ fatalities_since_earliest_incident_date }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Average Number Of Incidents Reported Per Day</th>
+          <td>{{ average_incidents_per_day }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Average Number Of Fatalities Reported Per Day</th>
+          <td>{{ average_fatal_incidents_per_day }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Currently 1 OD Every</th>
+          <td>{{ average_time_between_ods_in_hours_str }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Projected End of Month Total At Current Rate</th>
+          <td>{{ projected_end_of_month_total }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Highest Incident Day This Month</th>
+          <td>{{ highest_incident_date_this_month }}, {{ most_in_single_day_this_month }} reported ODs</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="scroll-container" style="border: 1px solid #ccc;">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Incidents Reported</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for incident in incidents_per_day %}
+        <tr>
+          <td>{{ incident.date_only }}</td>
+          <td>{{ incident.daily_total }}</td>
+        {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
 </div>
+

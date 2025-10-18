@@ -15,9 +15,8 @@
   </head>
   <body>
     {% include 'navbar.html' %}
-    <br />
 
-    <div class="container">
+    <div class="custom-container">
       {% if messages %} {% for message in messages %}
       <div
         class="alert {% if message.level == 25 %}alert-success {% elif message.level == 30 %}alert-danger {% else %}alert-info {% endif %} alert-dismissible fade show"
@@ -39,5 +38,6 @@
       integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
       crossorigin="anonymous"
     ></script>
+
   </body>
 </html>
