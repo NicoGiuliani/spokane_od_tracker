@@ -1,0 +1,26 @@
+<div style="display: flex; justify-content: space-between; align-items: center">
+  <table class="table table-bordered" style="width: fit-content">
+    <tbody>
+      <tr>
+        <th scope="row">Reported ODs Today</th>
+        <td>{{ OD_count_today }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Reported ODs Since {{ earliest_date }}</th>
+        <td>{{ OD_count_since_earliest }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Reported Fatal Incidents Since {{ earliest_date }}</th>
+        <td>{{ fatal_incidents_since_earliest }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Average Reported Per Day</th>
+        <td>{{ average_incidents_per_day }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Average Fatalities Reported Per Day</th>
+        <td>{{ average_fatal_incidents_per_day }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

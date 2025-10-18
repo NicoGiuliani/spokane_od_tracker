@@ -1,0 +1,22 @@
+{% extends 'base.html' %} {% block content %}
+<h1>Incident Page</h1>
+<form action="" method="POST">
+  {% csrf_token %} 
+  {% if form.errors %}
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    The form has the following errors 
+    {% for field in form %} 
+        {% if field.errors %} {{ field.errors }} {% endif %} 
+    {% endfor %}
+    <button
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="alert"
+      aria-label="Close"
+    ></button>
+  </div>
+  {% endif %} {{ form.as_p }}
+  <button class="btn btn-primary" type="submit">Add Incident</button>
+</form>
+<br />
+{% endblock %}

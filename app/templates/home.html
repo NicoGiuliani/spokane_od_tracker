@@ -1,0 +1,89 @@
+{% extends 'base.html' %} {% block content %} {% if user.is_authenticated %} 
+
+{% include 'summary.html' %}
+
+<hr />
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <!-- <th scope="col">#</th> -->
+      <th scope="col" class="col-2">Location</th>
+      <th scope="col" class="col-2">
+        <div style="display: inline-block">Date and Time</div>
+        <div class="dropdown" style="display: inline-block; margin-left: auto">
+          <button
+            class="btn btn-secondary dropdown-toggle"
+            style="padding: 5px; height: 20px"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          ></button>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item" href="{% url 'home' %}?sort=asc"
+                >Earliest onward</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" href="{% url 'home' %}"
+                >From most recent backward</a
+              >
+            </li>
+          </ul>
+        </div>
+      </th>
+      <th scope="col">Number Affected</th>
+
+      <th scope="col">Doses of Narcan Administered</th>
+      <th scope="col">Fatal Incident</th>
+      <th scope="col">Report Text</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for incident in incidents %}
+    <tr>
+      <!-- <th scope="row">{{ incident.id }}</th> -->
+      <td>{{ incident.location }}</td>
+      <td>{{ incident.datetime }}</td>
+      <td>{{ incident.number_affected }}</td>
+      <td>
+        {% if incident.narcan_doses_administered == None %} Unknown {% else %}
+        {{ incident.narcan_doses_administered }} {% endif %}
+      </td>
+      <td>{{ incident.fatal_incident }}</td>
+      <td>{{ incident.report_text }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% else %}
+<div class="col-md-6 offset-md-3">
+  <h1>Login</h1>
+  <form action="{% url 'home' %}" method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="username" class="form-label">Username</label>
+      <input
+        name="username"
+        id="username"
+        type="text"
+        class="form-control"
+        required
+      />
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Password</label>
+      <input
+        name="password"
+        id="password"
+        type="password"
+        class="form-control"
+        required
+      />
+    </div>
+    <button class="btn btn-primary" type="submit">Login</button>
+  </form>
+</div>
+{% endif %} {% endblock %}

@@ -1,0 +1,23 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Environment files
+.env
+
+# Django migrations
+*/migrations/*.pyc
+*/migrations/__pycache__/
+
+# Database files
+*.sqlite3
+
+# IDE / editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+Thumbs.db
+.DS_Store
