@@ -1,10 +1,19 @@
 {% extends 'base.html' %} {% block content %} {% if user.is_authenticated %} 
 
+<div id="header-area" class="d-flex" style="justify-content: space-between;">
+  <h3>
+    Showing Information From {{ time_span }} to Present
+  </h3>
+  <br />
+  
+  
+</div>
+
 {% include 'summary.html' %}
 
 <hr />
 
-<table class="table table-hover" style="table-layout: auto; width: auto;">
+<table class="table table-hover" style="table-layout: auto; width: 100%;">
   <thead>
     <tr>
       <th scope="col">#</th>

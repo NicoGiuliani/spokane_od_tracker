@@ -1,0 +1,5 @@
+<form method="get" class="d-flex gap-3" action="{% url 'home' %}">
+  <input type="month" class="form-control" name="time_period"
+         value="{{ selected_year }}-{{ selected_month|stringformat:'02d' }}">
+  <button class="form-control btn btn-outline-secondary" type="submit">Filter</button>
+</form>
