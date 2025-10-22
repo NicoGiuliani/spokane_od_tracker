@@ -14,3 +14,9 @@ html, body {
     overflow-y: auto;
 }
 
+#by_day_table {
+    td {
+        white-space: nowrap;
+    }
+}
+

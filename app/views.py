@@ -73,6 +73,44 @@ def get_incidents_per_day(time_period, earliest_incident_date, end_of_month):
         queryset = Incident.objects.filter(
             datetime__range=(earliest_incident_date.date(), end_of_month.date()),
         )
+    queryset = queryset.order_by("datetime")
+
+    int_hours = {
+        0: "12am",
+        1: "1am",
+        2: "2am",
+        3: "3am",
+        4: "4am",
+        5: "5am",
+        6: "6am",
+        7: "7am",
+        8: "8am",
+        9: "9am",
+        10: "10am",
+        11: "11am",
+        12: "12pm",
+        13: "1pm",
+        14: "2pm",
+        15: "3pm",
+        16: "4pm",
+        17: "5pm",
+        18: "6pm",
+        19: "7pm",
+        20: "8pm",
+        21: "9pm",
+        22: "10pm",
+        23: "11pm",
+    }
+
+    incidents_by_int_hour = {hour: 0 for hour in range(24)}
+    for incident in queryset:
+        hour_of_incident = incident.datetime.hour
+        incidents_by_int_hour[hour_of_incident] += 1
+
+    incidents_by_hour = {}
+    for key, value in incidents_by_int_hour.items():
+        incidents_by_hour[int_hours[key]] = value
+
     data = (
         queryset.annotate(date_only=TruncDate("datetime"))
         .values("date_only")
@@ -88,7 +126,29 @@ def get_incidents_per_day(time_period, earliest_incident_date, end_of_month):
             {"date_only": current.date(), "daily_total": by_date.get(current.date(), 0)}
         )
         current += timedelta(days=1)
-    return filled_data
+
+    incidents_by_weekday = {
+        "Monday": [0, 0],
+        "Tuesday": [0, 0],
+        "Wednesday": [0, 0],
+        "Thursday": [0, 0],
+        "Friday": [0, 0],
+        "Saturday": [0, 0],
+        "Sunday": [0, 0],
+    }
+
+    for entry in filled_data:
+        date = entry["date_only"]
+        day_of_week = date.strftime("%A")
+        number_of_incidents = entry["daily_total"]
+        incidents_by_weekday[day_of_week][0] += number_of_incidents
+
+    total = sum(v[0] for v in incidents_by_weekday.values())
+    for v in incidents_by_weekday.values():
+        v[1] = round((v[0] / total * 100), 2) if total else 0
+
+    filled_data.reverse()
+    return filled_data, incidents_by_weekday, incidents_by_hour
 
 
 def sort_incidents(incidents, sort_order):
@@ -196,9 +256,8 @@ def get_graphic(time_period, incidents_per_day):
     x = [item["date_only"] for item in incidents_per_day]
     y = [item["daily_total"] for item in incidents_per_day]
 
-    plt.figure(figsize=(8, 3.5))
+    plt.figure(figsize=(6, 3.5))
     plt.bar(x, y, color="teal")
-    plt.xlabel("Date")
 
     plt.xticks(x, [d.strftime("%b %d") for d in x], rotation=45, ha="right")
 
@@ -212,6 +271,59 @@ def get_graphic(time_period, incidents_per_day):
 
     plt.ylabel("Total Incidents")
     plt.title(f"Incidents Per Day { title }")
+    plt.tight_layout()
+
+    # Save to a bytes buffer
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format="png")
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+
+    # Encode to base64 to embed directly in HTML
+    graphic = base64.b64encode(image_png).decode("utf-8")
+    return graphic
+
+
+def get_graphic2(time_period, incidents_by_weekday):
+    now = datetime.now()
+    x = [key for key, value in incidents_by_weekday.items()]
+    y = [value[0] for key, value in incidents_by_weekday.items()]
+
+    plt.figure(figsize=(3, 2.5))
+    plt.bar(x, y, color="gray")
+
+    plt.xticks(x, rotation=45, ha="right")
+
+    plt.ylabel("Total Incidents")
+    plt.title("Incidents Per Day of Week")
+    plt.tight_layout()
+
+    # Save to a bytes buffer
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format="png")
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+
+    # Encode to base64 to embed directly in HTML
+    graphic = base64.b64encode(image_png).decode("utf-8")
+    return graphic
+
+
+def get_graphic3(time_period, incidents_by_hour):
+    now = datetime.now()
+    print(incidents_by_hour)
+    x = [key for key, value in incidents_by_hour.items()]
+    y = [value for key, value in incidents_by_hour.items()]
+
+    plt.figure(figsize=(6, 2.5))
+    plt.bar(x, y, color="orange")
+
+    plt.xticks(x, rotation=45, ha="right")
+
+    plt.ylabel("Total Incidents")
+    plt.title("Incidents by Hour of Day")
     plt.tight_layout()
 
     # Save to a bytes buffer
@@ -299,8 +411,8 @@ def home(request, time_period=None):
         sort_order = request.GET.get("sort", "desc")
         sort_incidents(incidents, sort_order)
 
-        incidents_per_day = get_incidents_per_day(
-            time_period, earliest_incident_date, end_of_month
+        incidents_per_day, incidents_by_weekday, incidents_by_hour = (
+            get_incidents_per_day(time_period, earliest_incident_date, end_of_month)
         )
 
         highest_incident_date_this_month, most_in_single_day_this_month = (
@@ -349,7 +461,9 @@ def home(request, time_period=None):
             OD_count_since_earliest_incident_date,
         )
 
-        graphic = get_graphic(time_period, incidents_per_day)
+        graphic1 = get_graphic(time_period, incidents_per_day)
+        graphic2 = get_graphic2(time_period, incidents_by_weekday)
+        graphic3 = get_graphic3(time_period, incidents_by_hour)
 
         months, years = get_time_range()
 
@@ -371,9 +485,13 @@ def home(request, time_period=None):
                 "average_time_between_ods_in_hours_str": average_time_between_ods_in_hours_str,
                 "projected_end_of_month_total": projected_end_of_month_total,
                 "incidents_per_day": incidents_per_day,
+                "incidents_by_weekday": incidents_by_weekday,
+                "incidents_by_hour": incidents_by_hour,
                 "highest_incident_date_this_month": highest_incident_date_this_month,
                 "most_in_single_day_this_month": most_in_single_day_this_month,
-                "graph": graphic,
+                "graph": graphic1,
+                "graph2": graphic2,
+                "graph3": graphic3,
                 "months": months,
                 "years": years,
             },
