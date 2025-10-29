@@ -11,60 +11,63 @@
 
 {% include 'summary.html' %}
 
+<br />
 <hr />
 
-<table class="table table-hover" style="table-layout: auto; width: 100%;">
-  <thead>
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col" class="col-2">Location</th>
-      <th scope="col" class="col-2">
-        <div style="display: inline-block">Date and Time</div>
-        <div class="dropdown" style="display: inline-block; margin-left: auto">
-          <button
-            class="btn btn-secondary dropdown-toggle"
-            style="padding: 5px; height: 20px"
-            type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          ></button>
-          <ul class="dropdown-menu">
-            <li>
-              <a class="dropdown-item" href="{% url 'home' %}?sort=asc"
-                >Earliest onward</a
-              >
-            </li>
-            <li>
-              <a class="dropdown-item" href="{% url 'home' %}"
-                >From most recent backward</a
-              >
-            </li>
-          </ul>
-        </div>
-      </th>
-      <th scope="col">Number Affected</th>
-      <th scope="col">Doses of Narcan Administered</th>
-      <th scope="col">Fatal Incident</th>
-      <th scope="col">Report Text</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for incident in incidents %}
-    <tr>
-      <th scope="row" style="white-space: nowrap;">{{ incident.incident_this_month }}</th>
-      <td>{{ incident.location }}</td>
-      <td>{{ incident.datetime }}</td>
-      <td>{{ incident.number_affected }}</td>
-      <td>
-        {% if incident.narcan_doses_administered == None %} Unknown {% else %}
-        {{ incident.narcan_doses_administered }} {% endif %}
-      </td>
-      <td>{{ incident.fatal_incident }}</td>
-      <td>{{ incident.report_text }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="custom-container">
+  <table class="table table-hover" style="table-layout: auto; width: 100%;">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col" class="col-2">Location</th>
+        <th scope="col" class="col-2">
+          <div style="display: inline-block">Date and Time</div>
+          <div class="dropdown" style="display: inline-block; margin-left: auto">
+            <button
+              class="btn btn-secondary dropdown-toggle"
+              style="padding: 5px; height: 20px"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            ></button>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item" href="{% url 'home' %}?sort=asc"
+                  >Earliest onward</a
+                >
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'home' %}"
+                  >From most recent backward</a
+                >
+              </li>
+            </ul>
+          </div>
+        </th>
+        <th scope="col">Number Affected</th>
+        <th scope="col">Doses of Narcan Administered</th>
+        <th scope="col">Fatal Incident</th>
+        <th scope="col">Report Text</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for incident in incidents %}
+      <tr>
+        <th scope="row" style="white-space: nowrap;">{{ incident.incident_this_month }}</th>
+        <td>{{ incident.location }}</td>
+        <td>{{ incident.datetime }}</td>
+        <td>{{ incident.number_affected }}</td>
+        <td>
+          {% if incident.narcan_doses_administered == None %} Unknown {% else %}
+          {{ incident.narcan_doses_administered }} {% endif %}
+        </td>
+        <td>{{ incident.fatal_incident }}</td>
+        <td>{{ incident.report_text }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
 {% else %}
 <div class="col-md-6 offset-md-3">

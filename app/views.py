@@ -9,22 +9,32 @@ from django.db.models import Sum, Max
 from django.db.models.functions import TruncDate
 import matplotlib.pyplot as plt
 import io, base64
+import folium
 
 from .models import Incident
 from .forms import IncidentForm, RegistrationForm
 
 
-# add date of most recent fatal incident
-# have separate page for fatal incidents across all time
-# verify that data is correct for each type of filtering
-# reverse the order shown in "totals per day" to most recent first
-# extrapolate other data like days of week with most, hours with most
-# look at chart.js to see if it can render a better looking chart
-# hide graph at a certain width to preserve other windows
-# add a "not found" type page when a filter is applied to a month without data
-# add field for cardiac arrest reports
-# sorting for other columns
-# export to csv
+def get_incidents_map(incidents):
+    city_center = [47.655329080504096, -117.39914631901254]  # Example: San Francisco
+    m = folium.Map(location=city_center, zoom_start=12)
+
+    for incident in incidents:
+        if incident.coordinates:
+            lat, lon = map(float, incident.coordinates.split(","))
+
+            folium.CircleMarker(
+                [lat, lon],
+                radius=5,
+                color="red",
+                popup=f"{incident.location}<br>Affected: {incident.number_affected}",
+                tooltip=incident.location,
+                fill=True,
+                fill_opacity=0.7,
+            ).add_to(m)
+
+    map_html = m._repr_html_()
+    return map_html
 
 
 def enumerate_incidents(incidents):
@@ -153,7 +163,10 @@ def get_incidents_per_day(time_period, earliest_incident_date, end_of_month):
 
 def sort_incidents(incidents, sort_order):
     reverse = True if sort_order == "desc" else False
-    incidents.sort(key=lambda x: x.datetime, reverse=reverse)
+    incidents.sort(
+        key=lambda x: int(str(x.incident_this_month).split("-")[0].strip()),
+        reverse=reverse,
+    )
 
 
 def get_highest_incident_day(incidents_per_day):
@@ -256,7 +269,7 @@ def get_graphic(time_period, incidents_per_day):
     x = [item["date_only"] for item in incidents_per_day]
     y = [item["daily_total"] for item in incidents_per_day]
 
-    plt.figure(figsize=(6, 3.5))
+    plt.figure(figsize=(8, 3.5))
     plt.bar(x, y, color="teal")
 
     plt.xticks(x, [d.strftime("%b %d") for d in x], rotation=45, ha="right")
@@ -290,34 +303,42 @@ def get_graphic2(time_period, incidents_by_weekday):
     x = [key for key, value in incidents_by_weekday.items()]
     y = [value[0] for key, value in incidents_by_weekday.items()]
 
-    plt.figure(figsize=(3, 2.5))
-    plt.bar(x, y, color="gray")
+    plt.figure(figsize=(8, 3.5))
+    bars = plt.bar(x, y, color="gray")
+
+    for bar in bars:
+        height = bar.get_height() - 2
+        plt.text(
+            bar.get_x() + bar.get_width() / 2,
+            height,
+            f"{height}",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+            color="black",
+        )
 
     plt.xticks(x, rotation=45, ha="right")
-
     plt.ylabel("Total Incidents")
     plt.title("Incidents Per Day of Week")
     plt.tight_layout()
 
-    # Save to a bytes buffer
     buffer = io.BytesIO()
     plt.savefig(buffer, format="png")
     buffer.seek(0)
     image_png = buffer.getvalue()
     buffer.close()
 
-    # Encode to base64 to embed directly in HTML
     graphic = base64.b64encode(image_png).decode("utf-8")
     return graphic
 
 
 def get_graphic3(time_period, incidents_by_hour):
     now = datetime.now()
-    print(incidents_by_hour)
     x = [key for key, value in incidents_by_hour.items()]
     y = [value for key, value in incidents_by_hour.items()]
 
-    plt.figure(figsize=(6, 2.5))
+    plt.figure(figsize=(8, 3.5))
     plt.bar(x, y, color="orange")
 
     plt.xticks(x, rotation=45, ha="right")
@@ -360,7 +381,7 @@ def get_time_range():
     return months, years
 
 
-def home(request, time_period=None):
+def home(request, time_period=None, query=None):
     if request.method == "POST":
         username = request.POST["username"]
         password = request.POST["password"]
@@ -376,6 +397,7 @@ def home(request, time_period=None):
         now = datetime.now()
         current_month = now.strftime("%Y-%m")
         time_period = request.GET.get("time_period", current_month)
+        query = request.GET.get("query", None)
 
         # if time_period is not provided, will return the 1st of the current month
         earliest_incident_date = get_earliest_incident_date(time_period)
@@ -467,6 +489,8 @@ def home(request, time_period=None):
 
         months, years = get_time_range()
 
+        map = get_incidents_map(incidents)
+
         return render(
             request,
             "home.html",
@@ -494,6 +518,7 @@ def home(request, time_period=None):
                 "graph3": graphic3,
                 "months": months,
                 "years": years,
+                "map": map,
             },
         )
 

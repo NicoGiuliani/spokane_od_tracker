@@ -1,0 +1,15 @@
+Figure out better placement for the map
+Consider pandas for determining correlations of any sort.
+Add date of most recent fatal incident
+Have separate page for fatal incidents across all time
+Verify that data is correct for each type of filtering
+Look at chart.js to see if it can render a better looking chart
+Make the page responsive for different widths
+Add a "not found" type page when a filter is applied to a month without data
+Add field for cardiac arrest reports
+Type of drug used or unspecified
+Sorting for other columns
+Ability to export to csv
+Find a way to show recurrent areas/streets
+Standardize naming for the location field
+Figure out what to do about "most in single day" when there's a tie
