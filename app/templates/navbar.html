@@ -55,12 +55,16 @@
       </ul>
       <div id="filter_and_search" class="d-flex gap-3">
         {% include 'filter.html' %}
-        <form class="d-flex" role="search">
+        <form class="d-flex" role="search" action="{% url 'home' %}" method="get">
+          {% if request.GET.time_period %}
+          <input type="hidden" name="time_period" value="{{ request.GET.time_period }}">
+          {% endif %}
           <input
             class="form-control me-2"
             type="search"
             placeholder="Search"
             aria-label="Search"
+            name="query"
           />
           <button class="btn btn-outline-secondary" type="submit">Search</button>
         </form>

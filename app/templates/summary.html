@@ -8,12 +8,10 @@
         </tr>
         <tr>
           <th scope="row">Reported ODs This Month</th>
-          <!-- <th scope="row">Reported ODs Since {{ earliest_date }}</th> -->
           <td>{{ OD_count_since_earliest_incident_date }}</td>
         </tr>
         <tr>
           <th scope="row">Reported Fatal Incidents This Month</th>
-          <!-- <th scope="row">Reported Fatal Incidents Since {{ earliest_date }}</th> -->
           <td>{{ fatalities_since_earliest_incident_date }}</td>
         </tr>
         <tr>
@@ -26,12 +24,10 @@
         </tr>
         <tr>
           <th scope="row">On Average, 1 OD Every</th>
-          <!-- <th scope="row">Currently 1 OD Every</th> -->
           <td>{{ average_time_between_ods_in_hours_str }}</td>
         </tr>
         <tr>
           <th scope="row">On Average, 1 Fatal Incident Every</th>
-          <!-- <th scope="row">Currently 1 Fatal Incident Every</th> -->
           <td>{{ one_fatal_incident_every_x_days_str }}</td>
         </tr>
         <tr>
@@ -67,47 +63,6 @@
   </div>
 
   <div id="scroll-container" style="border: 1px solid #ccc;">
-    <!-- <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Weekday</th>
-          <th>Incidents Reported</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for key, value in incidents_by_weekday.items %}
-        <tr>
-          <td>{{ key }}s</td>
-          <td>
-            <div style="float: left">{{ value.0 }}</div>
-            <div style="float: right">({{ value.1 }}%)</div>
-          </td>
-        {% endfor %}
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div id="scroll-container" style="border: 1px solid #ccc;">
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Hour of Day</th>
-          <th>Incidents Reported</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for key, value in incidents_by_hour.items %}
-        <tr>
-          <td>{{ key }}</td>
-          <td>
-            <div style="float: left">{{ value }}</div>
-          </td>
-        {% endfor %}
-        </tr>
-      </tbody>
-    </table>
-     -->
      <div class="chart-container">
        <img src="data:image/png;base64,{{ graph }}" alt="Incidents per Day">
      </div>

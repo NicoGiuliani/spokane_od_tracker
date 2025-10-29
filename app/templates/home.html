@@ -1,12 +1,13 @@
 {% extends 'base.html' %} {% block content %} {% if user.is_authenticated %} 
 
-<div id="header-area" class="d-flex" style="justify-content: space-between;">
+<div id="header-area">
   <h3>
     Showing Information From {{ time_span }} to Present
   </h3>
-  <br />
-  
-  
+  {% if query %}
+  <h4>Search Results Matching: <strong>{{query}}</strong></h4>
+  {% endif %}  
+
 </div>
 
 {% include 'summary.html' %}

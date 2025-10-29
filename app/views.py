@@ -62,7 +62,7 @@ def enumerate_incidents(incidents):
     return incidents
 
 
-def get_incidents_per_day(time_period, earliest_incident_date, end_of_month):
+def get_incidents_per_day(incidents, time_period, earliest_incident_date, end_of_month):
     now = datetime.now()
     current_year = now.year
     current_month = now.month
@@ -75,15 +75,7 @@ def get_incidents_per_day(time_period, earliest_incident_date, end_of_month):
     start_date = earliest_incident_date.replace(day=1)
     end_date = now if is_current_month else end_of_month
 
-    if time_period == "all_time":
-        queryset = Incident.objects.all()
-        end_date = now
-    else:
-        end_date = now if is_current_month else end_of_month
-        queryset = Incident.objects.filter(
-            datetime__range=(earliest_incident_date.date(), end_of_month.date()),
-        )
-    queryset = queryset.order_by("datetime")
+    queryset = Incident.objects.filter(id__in=[obj.id for obj in incidents])
 
     int_hours = {
         0: "12am",
@@ -179,29 +171,29 @@ def get_highest_incident_day(incidents_per_day):
     return highest_incident_date_this_month, most_in_single_day_this_month
 
 
-def get_od_count_today():
-    return Incident.objects.filter(datetime__date=date.today()).aggregate(
+def get_od_count_today(incidents):
+    queryset = Incident.objects.filter(id__in=[obj.id for obj in incidents])
+    return queryset.filter(datetime__date=date.today()).aggregate(
         total_today=Sum("number_affected")
     )["total_today"]
 
 
 def get_ods_since_earliest_incident_date(
-    earliest_incident_date, end_of_month, time_period
+    incidents, earliest_incident_date, end_of_month, time_period
 ):
-    if time_period == "all_time":
-        end_of_month = datetime.now()
-    return Incident.objects.filter(
+    queryset = Incident.objects.filter(id__in=[obj.id for obj in incidents])
+    od_count = queryset.filter(
         datetime__range=(earliest_incident_date, end_of_month)
     ).aggregate(total_ods=Sum("number_affected"))["total_ods"]
+    return od_count if od_count is not None else 0
 
 
 def get_fatalities_since_earliest_incident_date(
-    earliest_incident_date, end_of_month, time_period
+    incidents, earliest_incident_date, end_of_month, time_period
 ):
-    if time_period == "all_time":
-        end_of_month = datetime.now()
+    queryset = Incident.objects.filter(id__in=[obj.id for obj in incidents])
     return (
-        Incident.objects.filter(datetime__range=(earliest_incident_date, end_of_month))
+        queryset.filter(datetime__range=(earliest_incident_date, end_of_month))
         .filter(fatal_incident=True)
         .count()
     )
@@ -245,7 +237,9 @@ def get_projected_end_of_month_total(
 def get_time_span_between_fatal_incidents(average_fatal_incidents_per_day):
     if average_fatal_incidents_per_day == 0:
         return "None"
-    one_fatal_incident_every_x_days = 1 / average_fatal_incidents_per_day
+    one_fatal_incident_every_x_days = (
+        (1 / average_fatal_incidents_per_day) if average_fatal_incidents_per_day else 0
+    )
     return f"{math.floor(one_fatal_incident_every_x_days)} days, {math.floor((one_fatal_incident_every_x_days % 1) * 24)} hours, {math.floor(((one_fatal_incident_every_x_days % 1) * 24) % 1 * 60)} minutes"
 
 
@@ -253,7 +247,9 @@ def get_average_time_between_ods_in_hours(
     days_since_earliest_incident_date, OD_count_since_earliest_incident_date
 ):
     average_time_between_ods_in_hours = (
-        days_since_earliest_incident_date / OD_count_since_earliest_incident_date * 24
+        (days_since_earliest_incident_date / OD_count_since_earliest_incident_date * 24)
+        if OD_count_since_earliest_incident_date != 0
+        else 0
     )
 
     return f"{math.floor(average_time_between_ods_in_hours)} hours, {math.floor((average_time_between_ods_in_hours % 1) * 60)} minutes"
@@ -397,10 +393,13 @@ def home(request, time_period=None, query=None):
         now = datetime.now()
         current_month = now.strftime("%Y-%m")
         time_period = request.GET.get("time_period", current_month)
+        print("GET dict:", request.GET)
         query = request.GET.get("query", None)
+        print("query:", query)
 
         # if time_period is not provided, will return the 1st of the current month
         earliest_incident_date = get_earliest_incident_date(time_period)
+        print(earliest_incident_date)
         last_day = calendar.monthrange(
             earliest_incident_date.year, earliest_incident_date.month
         )[1]
@@ -413,6 +412,7 @@ def home(request, time_period=None, query=None):
             59,
             999999,
         )
+        print(end_of_month)
 
         time_span = earliest_incident_date.date()
 
@@ -428,20 +428,31 @@ def home(request, time_period=None, query=None):
                 datetime__range=(earliest_incident_date, end_of_month)
             )
 
+        # filter for 'search'
+        print("query:", query)
+        if query is not None:
+            print("this runs")
+            incidents = incidents.filter(location__icontains=query)
+
+        print("Here it is: ", incidents)
         incidents = enumerate_incidents(list(incidents.order_by("datetime")))
 
         sort_order = request.GET.get("sort", "desc")
         sort_incidents(incidents, sort_order)
 
+        print("do we get to here?")
+
         incidents_per_day, incidents_by_weekday, incidents_by_hour = (
-            get_incidents_per_day(time_period, earliest_incident_date, end_of_month)
+            get_incidents_per_day(
+                incidents, time_period, earliest_incident_date, end_of_month
+            )
         )
 
         highest_incident_date_this_month, most_in_single_day_this_month = (
             get_highest_incident_day(incidents_per_day)
         )
 
-        OD_count_today = get_od_count_today()
+        OD_count_today = get_od_count_today(incidents)
 
         if time_period == "all_time" or time_period == current_month:
             days_since_earliest_incident_date = (
@@ -453,20 +464,28 @@ def home(request, time_period=None, query=None):
             )
 
         OD_count_since_earliest_incident_date = get_ods_since_earliest_incident_date(
-            earliest_incident_date, end_of_month, time_period
+            incidents, earliest_incident_date, end_of_month, time_period
         )
+        print("THIS THING", OD_count_since_earliest_incident_date)
 
         fatalities_since_earliest_incident_date = (
             get_fatalities_since_earliest_incident_date(
-                earliest_incident_date, end_of_month, time_period
+                incidents, earliest_incident_date, end_of_month, time_period
             )
         )
 
         average_incidents_per_day = (
-            OD_count_since_earliest_incident_date / days_since_earliest_incident_date
+            (OD_count_since_earliest_incident_date / days_since_earliest_incident_date)
+            if days_since_earliest_incident_date
+            else 0
         )
         average_fatal_incidents_per_day = (
-            fatalities_since_earliest_incident_date / days_since_earliest_incident_date
+            (
+                fatalities_since_earliest_incident_date
+                / days_since_earliest_incident_date
+            )
+            if days_since_earliest_incident_date
+            else 0
         )
 
         average_time_between_ods_in_hours_str = get_average_time_between_ods_in_hours(
@@ -519,6 +538,7 @@ def home(request, time_period=None, query=None):
                 "months": months,
                 "years": years,
                 "map": map,
+                "query": query,
             },
         )
 
